@@ -1,0 +1,52 @@
+make-request.blade.php {
+
+    name: [
+        request_type,
+        tracking_code,
+        
+        barangay_fullname,
+        barangay_dob,
+        barangay_age,
+        barangay_pob,
+        barangay_civilStatus,
+        barangay_houseAddress,
+        barangay_purpose,
+        
+        residency_fullname,
+        residency_houseAddress,
+        residency_date,
+        residency_purpose,
+        
+        indigency_fullname,
+        indigency_houseAddress,
+        indigency_purpose,
+        
+        job_seeker_fullname,
+        job_seeker_houseAddress,
+        job_seeker_purpose,
+        
+        business_name,
+        business_address,
+        owner_name,
+        
+        barangay_id_surname,
+        barangay_id_firstName,
+        barangay_id_middleName,
+        barangay_id_address,
+        barangay_id_civilStatus,
+        barangay_id_bdate,
+        barangay_id_religion,
+        barangay_id_BirthPlace,
+        barangay_id_bloodtype,
+        barangay_id_mobilenum,
+        barangay_id_contactperson,
+        barangay_id_contnum,
+        barangay_id_relationship,
+    ]
+
+}
+
+
+
+
+

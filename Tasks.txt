@@ -1,0 +1,12 @@
+Staff pending - lagyan ng hover status need malagyan ng hoverStaff house hold records hindi responsive
+Row num dapat mapalitan ng house hold number
+need mag add ng Suffix
+House hold number bawal ma duplicate need ng validation
+Id number tanggalin
+
+Sa mga request file
+- pwede i edit ni staff ang info ni client need marerecord din sa log
+- print button sa action button para direct print na
+- need malagyan ng logs ex. staff1 nilag ang req kong file sa pending dapat may logs yon
+
+Auto fetch ng buong sytem need
