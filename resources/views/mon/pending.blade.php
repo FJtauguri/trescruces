@@ -53,69 +53,86 @@
 
 <script>
     function formatDate(dateString) {
-        const options = { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            second: '2-digit', 
-            hour12: true };
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+        };
         return new Date(dateString).toLocaleDateString('en-US', options);
     }
 
-    // var tableData = json($servicesJson);
-
+    const servicesData = JSON.parse(@json($servicesJson));
+    // Initialize the Tabulator table
     window.table = new Tabulator("#table-container", {
-        data: [],
-        placeholder: 'Empty Data',
+        data: servicesData,
+        placeholder: 'No pending requests available.',
         layout: "fitColumns",
         pagination: "local",
         paginationSize: 4,
         height: "100%",
-        rowFormatter: function (row) {
-            row.getElement().style.height = "60px";
-        },
+        rowFormatter: (row) => (row.getElement().style.height = "60px"),
         columns: [
             { title: "Fullname", field: "full_name", minWidth: 250 },
             { title: "Request Type", field: "request_type", minWidth: 200 },
             { title: "Tracking Code", field: "tracking_code", minWidth: 150 },
             {
-                title: "Date Requested", field: "created_at", minWidth: 200, formatter: function (cell, formatterParams, onRendered) {
-                    return formatDate(cell.getValue());
-                }
+                title: "Date Requested",
+                field: "created_at",
+                minWidth: 200,
+                formatter: (cell) => formatDate(cell.getValue()),
             },
             {
                 title: "Status",
                 field: "status",
                 minWidth: 120,
-                formatter: function (cell, formatterParams, onRendered) {
-                    let value = cell.getValue();
-                    return value === 'Pending' ? `<span style="color: yellow; font-weight: bolder;">${value}</span>` : value;
-                }
+                formatter: (cell) => {
+                    const value = cell.getValue();
+                    return value === 'PENDING'
+                        ? `<span style="color: yellow; font-weight: bolder;">${value}</span>`
+                        : value;
+                },
             },
             {
                 title: "Action",
                 field: "action",
-                formatter: function (cell, formatterParams, onRendered) {
-                    let data = cell.getRow().getData(); 
-                    let service_id = data.id;
+                formatter: (cell) => {
+                    const data = cell.getRow().getData();
                     return `
-                        <button title="View Request" class="btn btn-sm btn-outline-primary" onclick="viewRequest(${service_id})">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewRequest(${data.id})">
                             <i class="fa-regular fa-eye"></i>
                         </button>
-                        <button  title="Decline Request" class="btn btn-sm btn-outline-danger mx-1" onclick="decline(${service_id})">
+                        <button class="btn btn-sm btn-outline-danger mx-1" onclick="decline(${data.id})">
                             <i class="fa-solid fa-x"></i>
                         </button>
-                        <button  title="Approve Request" class="btn btn-sm btn-outline-success" onclick="confirmAction(3, ${service_id})">
+                        <button class="btn btn-sm btn-outline-success" onclick="confirmAction(3, ${data.id})">
                             <i class="fa-solid fa-check"></i>
-                        </button>
-                    `;
+                        </button>`;
                 },
-                minWidth: 150
-            }
+                minWidth: 150,
+            },
         ],
     });
+
+
+    function fetchInitialData() {
+        fetch('{{ route("pending.mon") }}')
+            .then((response) => response.json())
+            .then((data) => {
+                table.setData(data);
+            });
+    }
+
+
+    window.Echo.channel('staffDashboard').listen('.Monitoring', (event) => {
+        Swal.fire('Notification', event.message, 'info');
+        fetchInitialData();
+    });
+
+    fetchInitialData();
 
     function search_btn() {
         var searchValue = document.getElementById("search-input").value;

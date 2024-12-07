@@ -38,34 +38,54 @@ class MonitoringController extends Controller
         if (!in_array($authUser->roles, ['admin', 'staff'])) {
             abort(403, 'Unauthorized');
         }
+
         $pending = 'pending';
-        $services = Service::where('status', $pending)->latest()->get();
+
+        $services = Service::with('user')
+            ->where('status', $pending)
+            ->latest()
+            ->take(20)
+            ->get();
+
+        $services = $services->map(function ($service) {
+        
+            $user = User::find($service->user_id);
+
+            $service->full_name = ($user) ? trim("{$user->fname} {$user->middlename} {$user->lname}") : 'Unknown User';
+            $user = $service->user;
+
+        // $service->full_name = $user
+        //     ? trim("{$user->fname} {$user->middlename} {$user->lname}")
+        //     : 'Unknown User';
+
+        $service->status = strtoupper($service->status);
+                return $service;
+        });
 
         ActivityLog::create([
             'user_id' => auth()->user()->id,
             'activity' => 'Visited Pending Monitoring page.',
         ]);
 
-        // Transform the services data
-        $services = $services->map(function ($service) {
-            if ($service->user) {
-                $service->full_name = $service->user->fname . ' ' . $service->user->middlename . ' ' . $service->user->lname;
-            } else {
-                $service->full_name = 'Unknown User';
-            }
-            $service->status = strtoupper($service->status);
-            return $service;
-        });
         
-        // Prepare the JSON fetch
-        $servicesJson = $services->toJson();
 
-        // Fetch to staff
-        $pendingRequests = Service::with('user')->where('status', 'pending')->latest()->get();
-        event(new Monitoring('The request successfully submitted!', $pendingRequests));
+        event(new Monitoring('Visited Pending Monitoring page!', [
+            'pendingCount' => $services->count(), 
+        ]));
 
-        // return response()->json(['servicesJson' => $servicesJson]);
-        return view('mon.pending', compact('servicesJson'));
+        return view('mon.pending', [
+            'servicesJson' => $services->toJson(), 
+        ]);
+        
+        // // Prepare the JSON fetch
+        // $servicesJson = $services->toJson();
+
+        // // Fetch to staff
+        // $pendingRequests = Service::with('user')->where('status', 'pending')->latest()->get();
+        // event(new Monitoring('The request successfully submitted!', $pendingRequests));
+
+        // // return response()->json(['servicesJson' => $servicesJson]);
+        // return view('mon.pending', compact('servicesJson'));
     }
 
     public function approved()
