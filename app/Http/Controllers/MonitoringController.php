@@ -8,6 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\Service;
 use App\Models\User;
 use App\Models\Notification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RequestModified;
 
@@ -41,41 +42,84 @@ class MonitoringController extends Controller
 
         $pending = 'pending';
 
-        $services = Service::with('user')
+        $services = Service::with('users')
             ->where('status', $pending)
             ->latest()
             ->take(20)
             ->get();
-
-        $services = $services->map(function ($service) {
-        
-            $user = User::find($service->user_id);
-
-            $service->full_name = ($user) ? trim("{$user->fname} {$user->middlename} {$user->lname}") : 'Unknown User';
-            $user = $service->user;
-
-        // $service->full_name = $user
-        //     ? trim("{$user->fname} {$user->middlename} {$user->lname}")
-        //     : 'Unknown User';
-
-        $service->status = strtoupper($service->status);
-                return $service;
-        });
-
+            
         ActivityLog::create([
             'user_id' => auth()->user()->id,
             'activity' => 'Visited Pending Monitoring page.',
         ]);
-
         
+        // $services = $services->map(function ($service) {
+        //     $user = User::find($service->user_id);
+        //     if ($user) {
+        //         $service->full_name = $user->fname . ' ' . $user->middlename . ' ' . $user->lname;
+        //     } else {
+        //         $service->full_name = 'Unknown User';
+        //     }
+        //     $service->status = strtoupper($service->status);
+        //     return $service;
+        // });
 
-        event(new Monitoring('Visited Pending Monitoring page!', [
-            'pendingCount' => $services->count(), 
-        ]));
+        // event(new Monitoring([
+        //     'message' => [
+        //         'message' => 'Visited Pending Monitoring page!',
+        //         'pendingRequests' => $services->map(function ($service) {
+        //             return [
+        //                 'id' => $service->id,
+        //                 'full_name' => $service->full_name,
+        //                 'request_type' => $service->request_type,
+        //                 'tracking_code' => $service->tracking_code,
+        //                 'created_at' => $service->created_at,
+        //                 'status' => strtoupper($service->status),
+        //             ];
+        //         }),
+        //     ],
+        // ]));
+        $services = $services->map(function ($service) {
+            return [
+                'id' => $service->id,
+                'full_name' => $service->full_name, // Automatically resolved by the `getFullNameAttribute` accessor
+                'request_type' => $service->request_type,
+                'tracking_code' => $service->tracking_code,
+                'created_at' => $service->created_at,
+                'status' => strtoupper($service->status),
+            ];
+        });
+        
+        event(new Monitoring(['message' => ['pendingRequests' => $services]]));
+        
+        
+        Log::info('Pending Requests for Monitoring:', $services->toArray());
+        
 
         return view('mon.pending', [
             'servicesJson' => $services->toJson(), 
         ]);
+        
+
+        // $services = $services->map(function ($service) {
+        
+        //     // $user = User::find($service->user_id);
+        //     $user = $service->user;
+
+        //     $service->full_name = $user
+        //     ? trim("{$user->fname} {$user->middlename} {$user->lname}")
+        //     : 'Unknown User';
+
+        //     $service->status = strtoupper($service->status);
+        //     return $service;
+        // });
+        
+        
+
+        // event(new Monitoring('Visited Pending Monitoring page!', [
+        //     'pendingCount' => $services->count(), 
+        // ]));
+
         
         // // Prepare the JSON fetch
         // $servicesJson = $services->toJson();

@@ -27,7 +27,7 @@
                 <tbody>
                     @foreach($requests as $request)
                     <tr>
-                        <td>{{ $request->user->fname }} {{ $request->user->lname }}</td>
+                        <td>{{ $request->users->fname }} {{ $request->users->lname }}</td>
                         <td>{{ $request->request_type }}</td>
                         <td>{{ $request->tracking_code }}</td>
                         <td>

@@ -25,18 +25,10 @@ class RequestFileController extends Controller
                 $maxRequests = 1000;
             }
 
-            // if (!is_numeric($maxRequests) || (int) $maxRequests <= 0) {
-            //     Log::error('Invalid max requests configuration: ' . $maxRequests);
-            //     return redirect()->back()->with('error', 'Max requests configuration is invalid.');
-            // }
-
             $maxRequests = (int) $maxRequests;
 
             $userRequestCount = Service::where('user_id', $userID)->count();
-            if ($userRequestCount >= $maxRequests) {
-                return redirect()->back()->with('error', 'Max requests configuration is invalid.');
-            }
-            if ($maxRequests <= 0) {
+            if ($userRequestCount >= $maxRequests || $maxRequests <= 0) {
                 return redirect()->back()->with('error', 'Max requests configuration is invalid.');
             }
 
@@ -80,12 +72,16 @@ class RequestFileController extends Controller
             // Create a new Service instance
             $service = new Service();
             $service->user_id = $userID;
-            $service->request_type = $request->input('request_type', 'Unkown');
+            $service->request_type = $request->input('request_type', 'Unknown');
             $service->tracking_code = $request->input('tracking_code');
             $service->status = 'pending';
             $service->comment = $request->input('comment', '');
             $service->data = json_encode($serviceData);
-            $service->save();
+
+            if (!$service->save()) {
+                Log::error('Failed to save service request', ['user_id' => $userID]);
+                return redirect()->back()->with('error', 'Failed to save your request.');
+            }
 
             // Log the activity
             ActivityLog::create([
@@ -94,7 +90,7 @@ class RequestFileController extends Controller
             ]);
 
             // Fetch to staff
-            $pendingRequests = Service::with('user') //newly added
+            $pendingRequests = Service::with('users') //newly added
                 ->where('status', 'pending')
                 ->latest()
                 ->get();
@@ -102,13 +98,15 @@ class RequestFileController extends Controller
             // Format of data
             $pendingRequests = $pendingRequests->map(function ($request) {
                 return [
+                    'full_name' => $request->full_name,
                     'tracking_code' => $request->tracking_code,
                     'request_type' => $request->request_type,
                     'status' => $request->status,
                     'created_at' => $request->created_at->format('Y-m-d H:i:s'),
-                    'full_name' => $request->user->full_name ?? 'N/A', //newly add
                 ];
             });
+
+            \Log::info('Pending Requests Data:', $pendingRequests->toArray());
 
             // Broadcasting : will see at lister.js
             event(new Monitoring([
@@ -120,7 +118,8 @@ class RequestFileController extends Controller
 
         } catch (\Exception $e) {
             Log::error('RequestFileController store method error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'An error occurred while processing your request.');
+            Log::error('RequestFileController store method error details: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'An error occurred while processing your request. Please try again later.');
         }
         
     }

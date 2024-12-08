@@ -18,13 +18,28 @@ class Service extends Model
         'data', 'modified_by'
     ];
 
+    protected $appends = ['full_name'];
+
+    public function getFullNameAttribute() {
+        $user = $this->users;
+        if ($user) {
+            $firstName = $user->fname ?: '';
+            $middleName = $user->middlename ?: '';
+            $lastName = $user->lname ?: '';
+            return trim("$firstName $middleName $lastName");
+        }
+        \Log::warning('User relationship not resolved for Service ID: ' . $this->id);
+        return 'Unknown User';
+    }
+    
+
     protected $dates = ['deleted_at'];
     protected $casts = [
         'data' => 'array',
     ];
     
     
-      public function user()
+      public function users()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
@@ -33,20 +48,4 @@ class Service extends Model
     {
         return $this->belongsTo(User::class, 'modified_by', 'id');
     }
-
-    // public function scopeSearch($query, $searchTerm)
-    // {
-        //     return $query->where(function($q) use ($searchTerm) {
-    //         $q->where('user_id', 'like', "%{$searchTerm}%")
-    //           ->orWhere('request_type', 'like', "%{$searchTerm}%")
-    //           ->orWhere('tracking_code', 'like', "%{$searchTerm}%")
-    //           ->orWhere('status', 'like', "%{$searchTerm}%")
-    //           ->orWhere('comment', 'like', "%{$searchTerm}%")
-    //           ->orWhere('data', 'like', "%{$searchTerm}%")
-    //           ->orWhereDate('created_at', 'like', "%{$searchTerm}%")
-    //           ->orWhereDate('updated_at', 'like', "%{$searchTerm}%");
-    //     });
-    // }
 }
-
-// Max requests configuration not found.

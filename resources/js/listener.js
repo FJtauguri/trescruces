@@ -13,27 +13,51 @@ window.Echo = new Echo({
 
 let channel = window.Echo.channel('staffDashboard');
 
-channel.listen('.Monitoring', function(data) {
-  console.log('Received data:', data);
-  // alert(data.message);
-  if (data.message && data.message.pendingRequests) {
-    const formattedData = data.message.pendingRequests.map(request => ({
+channel.listen('.Monitoring', function (data) {
+  if (!data || !data.message || !data.message.pendingRequests) {
+      console.error("No pendingRequests found in the data.");
+      return;
+  }
+
+  console.log("Received data:", data.message.pendingRequests);
+
+  const formattedData = data.message.pendingRequests.map(request => ({
       id: request.id || null,
-      full_name: request.full_name | "N/A",
+      full_name: request.full_name || "N/A",
       request_type: request.request_type,
       tracking_code: request.tracking_code,
       created_at: request.created_at,
       status: request.status,
-    }));
+  }));
 
-    if (window.table) {
+  if (window.table) {
       window.table.replaceData(formattedData);
-      console.log('Formatted data for table:', formattedData);
-
-    } else {
-      console.error("Table is not initialized or accessible.");
-    }
+      console.log("Formatted data for table:", formattedData);
   } else {
-    console.error("No 'pendingRequests' found in the received data.");
+      console.error("Table is not initialized or accessible.");
   }
 });
+
+
+  // console.log('Received data:', data.message.pendingRequests);
+  // // alert(data.message);
+  // if (data.message && data.message.pendingRequests) {
+  //   const formattedData = data.message.pendingRequests.map(request => ({
+  //     id: request.id || null,
+  //     full_name: request.full_name || "N/A",
+  //     request_type: request.request_type,
+  //     tracking_code: request.tracking_code,
+  //     created_at: request.created_at,
+  //     status: request.status,
+  //   }));
+
+  //   if (window.table) {
+  //     window.table.replaceData(formattedData);
+  //     console.log('Formatted data for table:', formattedData);
+
+  //   } else {
+  //     console.error("Table is not initialized or accessible.");
+  //   }
+  // } else {
+  //   console.error("No 'pendingRequests' found in the received data.");
+  // }

@@ -126,11 +126,17 @@
             });
     }
 
+    // fetch(' route("pending.mon") }}')
+    // .then((response) => response.json())
+    // .then((data) => {
+    //     console.log('Fetched Data:', data); // Debug fetched data
+    //     table.setData(data);
+    // });
 
-    window.Echo.channel('staffDashboard').listen('.Monitoring', (event) => {
-        Swal.fire('Notification', event.message, 'info');
-        fetchInitialData();
-    });
+    // window.Echo.channel('staffDashboard').listen('.Monitoring', (event) => {
+    //     Swal.fire('Notification', event.message, 'info');
+    //     fetchInitialData();
+    // });
 
     fetchInitialData();
 
