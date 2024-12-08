@@ -13,26 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\RequestModified;
 
 class MonitoringController extends Controller
-{
-    // fetch
-    // public function fetchPendingRequests()
-    // {
-    //     $pending = 'pending';
-    //     $services = Service::with('user')->where('status', $pending)->latest()->get();
-    
-    //     $services = $services->map(function ($service) {
-    //         if ($service->user) {
-    //             $service->full_name = $service->user->fname . ' ' . $service->user->middlename . ' ' . $service->user->lname;
-    //         } else {
-    //             $service->full_name = 'Unknown User';
-    //         }
-    //         $service->status = strtoupper($service->status);
-    //         return $service;
-    //     });
-    
-    //     return response()->json($services);
-    // }
-    
+{   
     public function pending()
     {
         $authUser = auth()->user();
@@ -52,37 +33,10 @@ class MonitoringController extends Controller
             'user_id' => auth()->user()->id,
             'activity' => 'Visited Pending Monitoring page.',
         ]);
-        
-        // $services = $services->map(function ($service) {
-        //     $user = User::find($service->user_id);
-        //     if ($user) {
-        //         $service->full_name = $user->fname . ' ' . $user->middlename . ' ' . $user->lname;
-        //     } else {
-        //         $service->full_name = 'Unknown User';
-        //     }
-        //     $service->status = strtoupper($service->status);
-        //     return $service;
-        // });
-
-        // event(new Monitoring([
-        //     'message' => [
-        //         'message' => 'Visited Pending Monitoring page!',
-        //         'pendingRequests' => $services->map(function ($service) {
-        //             return [
-        //                 'id' => $service->id,
-        //                 'full_name' => $service->full_name,
-        //                 'request_type' => $service->request_type,
-        //                 'tracking_code' => $service->tracking_code,
-        //                 'created_at' => $service->created_at,
-        //                 'status' => strtoupper($service->status),
-        //             ];
-        //         }),
-        //     ],
-        // ]));
         $services = $services->map(function ($service) {
             return [
                 'id' => $service->id,
-                'full_name' => $service->full_name, // Automatically resolved by the `getFullNameAttribute` accessor
+                'full_name' => $service->full_name,
                 'request_type' => $service->request_type,
                 'tracking_code' => $service->tracking_code,
                 'created_at' => $service->created_at,
@@ -92,44 +46,11 @@ class MonitoringController extends Controller
         
         event(new Monitoring(['message' => ['pendingRequests' => $services]]));
         
-        
         Log::info('Pending Requests for Monitoring:', $services->toArray());
-        
 
         return view('mon.pending', [
             'servicesJson' => $services->toJson(), 
         ]);
-        
-
-        // $services = $services->map(function ($service) {
-        
-        //     // $user = User::find($service->user_id);
-        //     $user = $service->user;
-
-        //     $service->full_name = $user
-        //     ? trim("{$user->fname} {$user->middlename} {$user->lname}")
-        //     : 'Unknown User';
-
-        //     $service->status = strtoupper($service->status);
-        //     return $service;
-        // });
-        
-        
-
-        // event(new Monitoring('Visited Pending Monitoring page!', [
-        //     'pendingCount' => $services->count(), 
-        // ]));
-
-        
-        // // Prepare the JSON fetch
-        // $servicesJson = $services->toJson();
-
-        // // Fetch to staff
-        // $pendingRequests = Service::with('user')->where('status', 'pending')->latest()->get();
-        // event(new Monitoring('The request successfully submitted!', $pendingRequests));
-
-        // // return response()->json(['servicesJson' => $servicesJson]);
-        // return view('mon.pending', compact('servicesJson'));
     }
 
     public function approved()
